@@ -77,6 +77,7 @@
         let scaleFactor = 1;
 
         function showStep(step) {
+            console.log(`Switching to step ${step}`);
             document.getElementById("step1").classList.remove("active");
             document.getElementById("step2").classList.remove("active");
             document.getElementById("step3").classList.remove("active");
@@ -197,16 +198,19 @@
             });
 
             document.getElementById("nextStep").addEventListener("click", function() {
+                console.log("Proceeding to step 3");
                 setupStep3();
                 showStep(3);
             });
         }
 
         function setupStep3() {
+            console.log("Setting up step 3");
             const canvas = document.getElementById("transformedCanvas");
             const ctx = canvas.getContext("2d");
 
             if (typeof cv === "undefined" || !cv.Mat) {
+                console.log("OpenCV.js is not ready yet. Retrying...");
                 setTimeout(setupStep3, 100);
                 return;
             }
@@ -224,7 +228,7 @@
 
             const longestSide = getLongestSide(points);
             const targetWidth = longestSide;
-            const targetHeight = longestSide * 2 / 3;
+            const targetHeight = longestSide * 2 / 3; // 假設高寬比
             const targetPoints = [
                 { x: 0, y: 0 },
                 { x: targetWidth, y: 0 },
@@ -265,6 +269,7 @@
             dstPoints.delete();
 
             document.getElementById("previousStep").addEventListener("click", function() {
+                console.log("Going back to step 2");
                 showStep(2);
             });
 
