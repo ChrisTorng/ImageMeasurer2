@@ -9,19 +9,17 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin: 20px;
+            margin: 0;
+            padding: 0;
             background-color: #f0f0f0;
-        }
-        h1 {
-            color: #333;
-        }
-        p {
-            color: #666;
+            overflow: hidden;
         }
         canvas {
             border: 1px solid #ccc;
             margin: 10px auto;
             display: block;
+            max-width: 100vw;
+            max-height: 80vh;
         }
         button {
             padding: 10px 20px;
@@ -32,29 +30,29 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        button:hover {
-            background-color: #0056b3;
-        }
         #step1, #step2, #step3 {
             display: none;
         }
         #step1.active, #step2.active, #step3.active {
             display: block;
         }
-        #uploadPhoto {
-            margin: 20px;
+        #uploadArea {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            margin: 20px auto;
+            width: 80%;
+            max-width: 600px;
         }
     </style>
 </head>
 <body>
-    <!-- 第一步：首頁與照片上傳 -->
     <div id="step1" class="active">
         <h1>照片變形校正工具</h1>
         <p>上傳一張照片，框選變形的四邊形區域，我們將自動校正為長方形。</p>
-        <input type="file" id="uploadPhoto" accept="image/*">
+        <div id="uploadArea">拖放照片至此或點擊選擇文件</div>
+        <input type="file" id="uploadPhoto" accept="image/*" style="display: none;">
     </div>
 
-    <!-- 第二步：框選四邊形 -->
     <div id="step2">
         <h2>框選四邊形</h2>
         <p>拖曳四個頂點以框選照片中變形的長方形物體。</p>
@@ -63,7 +61,6 @@
         <button id="exportStep2">匯出影像</button>
     </div>
 
-    <!-- 第三步：透視變換與調整 -->
     <div id="step3">
         <h2>校正結果</h2>
         <p>調整邊界以涵蓋完整內容，或返回上一步重新框選。</p>
@@ -76,9 +73,9 @@
         let originalImage = null;
         let points = [];
         let selectedPoint = null;
-        let transformedImage = null;
+        let originalFileName = "";
+        let scaleFactor = 1;
 
-        // 切換步驟
         function showStep(step) {
             document.getElementById("step1").classList.remove("active");
             document.getElementById("step2").classList.remove("active");
@@ -86,9 +83,8 @@
             document.getElementById(`step${step}`).classList.add("active");
         }
 
-        // 第一步：上傳照片
-        document.getElementById("uploadPhoto").addEventListener("change", function(event) {
-            const file = event.target.files[0];
+        function handleFileUpload(file) {
+            originalFileName = file.name.split('.').slice(0, -1).join('.');
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
@@ -100,16 +96,41 @@
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
+        }
+
+        const uploadArea = document.getElementById("uploadArea");
+        uploadArea.addEventListener("click", function() {
+            document.getElementById("uploadPhoto").click();
+        });
+        uploadArea.addEventListener("dragover", function(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = "#007BFF";
+        });
+        uploadArea.addEventListener("drop", function(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = "#ccc";
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith("image/")) {
+                handleFileUpload(file);
+            }
+        });
+        document.getElementById("uploadPhoto").addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFileUpload(file);
+            }
         });
 
-        // 第二步：設置畫布與框選功能
         function setupStep2() {
             const canvas = document.getElementById("photoCanvas");
             const ctx = canvas.getContext("2d");
-            canvas.width = originalImage.width;
-            canvas.height = originalImage.height;
 
-            // 初始化預設四邊形
+            const maxWidth = window.innerWidth * 0.9;
+            const maxHeight = window.innerHeight * 0.7;
+            scaleFactor = Math.min(maxWidth / originalImage.width, maxHeight / originalImage.height, 1);
+            canvas.width = originalImage.width * scaleFactor;
+            canvas.height = originalImage.height * scaleFactor;
+
             points = [
                 { x: canvas.width * 0.25, y: canvas.height * 0.25 },
                 { x: canvas.width * 0.75, y: canvas.height * 0.25 },
@@ -119,7 +140,7 @@
 
             function drawQuadrilateral() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(originalImage, 0, 0);
+                ctx.drawImage(originalImage, 0, 0, canvas.width, canvas.height);
                 ctx.beginPath();
                 ctx.moveTo(points[0].x, points[0].y);
                 for (let i = 1; i < points.length; i++) {
@@ -139,11 +160,10 @@
 
             drawQuadrilateral();
 
-            // 拖曳功能
             canvas.addEventListener("mousedown", function(e) {
                 const rect = canvas.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const mouseY = e.clientY - rect.top;
+                const mouseX = (e.clientX - rect.left);
+                const mouseY = (e.clientY - rect.top);
                 points.forEach((point, index) => {
                     const dx = mouseX - point.x;
                     const dy = mouseY - point.y;
@@ -156,8 +176,8 @@
             canvas.addEventListener("mousemove", function(e) {
                 if (selectedPoint !== null) {
                     const rect = canvas.getBoundingClientRect();
-                    const mouseX = e.clientX - rect.left;
-                    const mouseY = e.clientY - rect.top;
+                    const mouseX = (e.clientX - rect.left);
+                    const mouseY = (e.clientY - rect.top);
                     points[selectedPoint].x = mouseX;
                     points[selectedPoint].y = mouseY;
                     drawQuadrilateral();
@@ -168,40 +188,35 @@
                 selectedPoint = null;
             });
 
-            // 匯出功能
             document.getElementById("exportStep2").addEventListener("click", function() {
                 const dataURL = canvas.toDataURL("image/png");
                 const link = document.createElement("a");
                 link.href = dataURL;
-                link.download = "step2_image.png";
+                link.download = `${originalFileName}_step2.png`;
                 link.click();
             });
 
-            // 下一步
             document.getElementById("nextStep").addEventListener("click", function() {
                 setupStep3();
                 showStep(3);
             });
         }
 
-        // 第三步：透視變換與調整
         function setupStep3() {
-            // 等待 OpenCV.js 加載完成
+            const canvas = document.getElementById("transformedCanvas");
+            const ctx = canvas.getContext("2d");
+
             if (typeof cv === "undefined" || !cv.Mat) {
                 setTimeout(setupStep3, 100);
                 return;
             }
 
-            const canvas = document.getElementById("transformedCanvas");
-            const ctx = canvas.getContext("2d");
-
-            // 計算最長邊
             function getLongestSide(points) {
                 const distances = [];
                 for (let i = 0; i < points.length; i++) {
                     const next = (i + 1) % points.length;
-                    const dx = points[next].x - points[i].x;
-                    const dy = points[next].y - points[i].y;
+                    const dx = (points[next].x - points[i].x) / scaleFactor;
+                    const dy = (points[next].y - points[i].y) / scaleFactor;
                     distances.push(Math.sqrt(dx * dx + dy * dy));
                 }
                 return Math.max(...distances);
@@ -209,7 +224,7 @@
 
             const longestSide = getLongestSide(points);
             const targetWidth = longestSide;
-            const targetHeight = longestSide * 2 / 3; // 假設高寬比
+            const targetHeight = longestSide * 2 / 3;
             const targetPoints = [
                 { x: 0, y: 0 },
                 { x: targetWidth, y: 0 },
@@ -217,12 +232,16 @@
                 { x: 0, y: targetHeight }
             ];
 
-            // 透視變換
+            const originalPoints = points.map(point => ({
+                x: point.x / scaleFactor,
+                y: point.y / scaleFactor
+            }));
+
             const srcPoints = cv.matFromArray(4, 1, cv.CV_32FC2, [
-                points[0].x, points[0].y,
-                points[1].x, points[1].y,
-                points[2].x, points[2].y,
-                points[3].x, points[3].y
+                originalPoints[0].x, originalPoints[0].y,
+                originalPoints[1].x, originalPoints[1].y,
+                originalPoints[2].x, originalPoints[2].y,
+                originalPoints[3].x, originalPoints[3].y
             ]);
             const dstPoints = cv.matFromArray(4, 1, cv.CV_32FC2, [
                 targetPoints[0].x, targetPoints[0].y,
@@ -245,17 +264,15 @@
             srcPoints.delete();
             dstPoints.delete();
 
-            // 上一步
             document.getElementById("previousStep").addEventListener("click", function() {
                 showStep(2);
             });
 
-            // 匯出功能
             document.getElementById("exportStep3").addEventListener("click", function() {
                 const dataURL = canvas.toDataURL("image/png");
                 const link = document.createElement("a");
                 link.href = dataURL;
-                link.download = "step3_image.png";
+                link.download = `${originalFileName}_transformed.png`;
                 link.click();
             });
         }
