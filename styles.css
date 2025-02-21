@@ -1,0 +1,46 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  background-color: #f0f0f0;
+  overflow: hidden;
+}
+
+canvas {
+  border: 1px solid #ccc;
+  margin: 10px auto;
+  display: block;
+  max-width: 100vw;
+  max-height: 80vh;
+}
+
+button {
+  padding: 10px 20px;
+  margin: 5px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#step1,
+#step2,
+#step3 {
+  display: none;
+}
+
+#step1.active,
+#step2.active,
+#step3.active {
+  display: block;
+}
+
+#uploadArea {
+  border: 2px dashed #ccc;
+  padding: 20px;
+  margin: 20px auto;
+  width: 80%;
+  max-width: 600px;
+}
