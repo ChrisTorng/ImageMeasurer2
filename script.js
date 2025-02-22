@@ -301,35 +301,10 @@ function redrawTransformedImage() {
 function exportTransformedImage() {
     if (!transformedMat) return;
 
-    // 創建一個與當前畫布相同比例但保持原始解析度的畫布
-    const scaleRatio = originalImage.width / transformedImageSize.width;
     const exportCanvas = document.createElement('canvas');
-    exportCanvas.width = canvasSize.width * scaleRatio;
-    exportCanvas.height = canvasSize.height * scaleRatio;
-    const exportCtx = exportCanvas.getContext('2d');
-
-    // 建立暫存畫布來處理原始大小的變形影像
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = transformedMat.cols;
-    tempCanvas.height = transformedMat.rows;
-    cv.imshow(tempCanvas, transformedMat);
-
-    // 在匯出畫布上繪製變形後的影像，保持原始解析度
-    const scaledPosition = {
-        x: transformedImagePosition.x * scaleRatio,
-        y: transformedImagePosition.y * scaleRatio
-    };
-    const scaledSize = {
-        width: transformedMat.cols,
-        height: transformedMat.rows
-    };
-
-    exportCtx.drawImage(tempCanvas,
-        0, 0, tempCanvas.width, tempCanvas.height,
-        scaledPosition.x, scaledPosition.y,
-        scaledSize.width, scaledSize.height);
-
-    // 建立下載連結
+    exportCanvas.width = transformedMat.cols;
+    exportCanvas.height = transformedMat.rows;
+    cv.imshow(exportCanvas, transformedMat);
     const link = document.createElement('a');
     link.download = `${originalFileName}_transformed.png`;
     link.href = exportCanvas.toDataURL('image/png');
@@ -397,48 +372,66 @@ function setupStep3() {
     const dst = new cv.Mat();
 
     // 使用原始影像大小進行轉換
+    // 修改：計算完整影像邊界與調整矩陣，避免變數命名衝突
+    let corners = [
+        { x: 0, y: 0 },
+        { x: originalImage.width, y: 0 },
+        { x: originalImage.width, y: originalImage.height },
+        { x: 0, y: originalImage.height }
+    ];
+    let transformedCorners = corners.map(pt => {
+        let srcMat = cv.matFromArray(3, 1, cv.CV_64FC1, [pt.x, pt.y, 1]);
+        let dstMat = new cv.Mat();
+        cv.gemm(transformMatrix, srcMat, 1, new cv.Mat(), 0, dstMat);
+        let d = dstMat.data64F[2];
+        let x = dstMat.data64F[0] / d;
+        let y = dstMat.data64F[1] / d;
+        srcMat.delete(); dstMat.delete();
+        return { x, y };
+    });
+    let warpMinX = Math.min(...transformedCorners.map(p => p.x));
+    let warpMinY = Math.min(...transformedCorners.map(p => p.y));
+    let warpMaxX = Math.max(...transformedCorners.map(p => p.x));
+    let warpMaxY = Math.max(...transformedCorners.map(p => p.y));
+    let dstWidth = Math.round(warpMaxX - warpMinX);
+    let dstHeight = Math.round(warpMaxY - warpMinY);
+
+    let translation = cv.matFromArray(3, 3, cv.CV_64F, [
+        1, 0, -warpMinX,
+        0, 1, -warpMinY,
+        0, 0, 1
+    ]);
+    let adjustedMatrix = new cv.Mat();
+    cv.gemm(translation, transformMatrix, 1, new cv.Mat(), 0, adjustedMatrix);
+
     cv.warpPerspective(
         src,
         dst,
-        transformMatrix,
-        new cv.Size(originalImage.width, originalImage.height)
+        adjustedMatrix,
+        new cv.Size(dstWidth, dstHeight)
     );
+    // 釋放暫存矩陣
+    translation.delete(); adjustedMatrix.delete();
 
-    // 儲存原始大小的轉換結果
-    transformedMat = dst.clone();  // 儲存 Mat 物件供後續使用
+    // 儲存完整轉換結果
+    transformedMat = dst.clone();
+
+    // 顯示轉換後影像
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = dst.cols;
     tempCanvas.height = dst.rows;
     cv.imshow(tempCanvas, dst);
-    
     transformedImage = new Image();
     transformedImage.onload = function() {
-        initializeTransformedImage(canvas.width, canvas.height);
+        initializeTransformedImage(tempCanvas.width, tempCanvas.height);
         redrawTransformedImage();
         setupTransformedImageControls();
     };
     transformedImage.src = tempCanvas.toDataURL();
 
-    // 調整顯示尺寸
-    const maxWidth = window.innerWidth * 0.9;
-    const maxHeight = window.innerHeight * 0.7;
-    const displayScale = Math.min(
-        maxWidth / originalImage.width,
-        maxHeight / originalImage.height,
-        1
-    );
-    canvas.width = originalImage.width * displayScale;
-    canvas.height = originalImage.height * displayScale;
-
-    // 縮放顯示結果
-    const displayMat = new cv.Mat();
-    cv.resize(dst, displayMat, new cv.Size(canvas.width, canvas.height));
-    cv.imshow(canvas, displayMat);
-
     // 釋放記憶體
     src.delete();
     dst.delete();
-    displayMat.delete();
     transformMatrix.delete();
     srcPoints.delete();
     dstPoints.delete();
