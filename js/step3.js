@@ -61,8 +61,8 @@ export function setupStep3() {
     const src = cv.imread(state.originalImage);
     const dst = new cv.Mat();
 
-    // 使用原始影像大小進行轉換
-    // 計算完整影像邊界與調整矩陣
+    // Transform with original image size
+    // Calculate full image boundary and adjust matrix
     let corners = [
         { x: 0, y: 0 },
         { x: state.originalImage.width, y: 0 },
@@ -247,20 +247,20 @@ function redrawTransformedImage() {
 function exportTransformedImage() {
     if (!state.transformedMat) return;
 
-    // 建立匯出用畫布，大小與目前畫布相同比例
+    // Create export canvas with the same aspect ratio as the current canvas
     const exportCanvas = document.createElement('canvas');
     const scaleRatio = state.transformedMat.cols / state.transformedImageSize.width;
     exportCanvas.width = state.canvasSize.width * scaleRatio;
     exportCanvas.height = state.canvasSize.height * scaleRatio;
     const exportCtx = exportCanvas.getContext('2d');
 
-    // 建立暫存畫布存放原始大小的轉換影像
+    // Create a temporary canvas to store the transformed image in its original size
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = state.transformedMat.cols;
     tempCanvas.height = state.transformedMat.rows;
     cv.imshow(tempCanvas, state.transformedMat);
 
-    // 將轉換後影像繪製到匯出畫布上，保持位置和縮放比例
+    // Draw the transformed image onto the export canvas, maintaining position and scale
     const scaledPosition = {
         x: state.transformedImagePosition.x * scaleRatio,
         y: state.transformedImagePosition.y * scaleRatio
@@ -272,7 +272,7 @@ function exportTransformedImage() {
         tempCanvas.width, tempCanvas.height
     );
 
-    // 建立下載連結
+    // Create download link
     const link = document.createElement('a');
     link.download = `${state.originalFileName}_transformed.png`;
     link.href = exportCanvas.toDataURL('image/png');
