@@ -4,12 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Photo Distortion Correction Tool</title>
-    <script
+    <!-- <script
       async
       src="https://docs.opencv.org/4.x/opencv.js"
       onload="onOpenCvReady();"
     ></script>
-    <script src="script.js" defer></script>
+    <script src="script.js" defer></script> -->
+    <script src="https://docs.opencv.org/4.8.0/opencv.js" async></script>
+    <script type="module" src="js/globals.js"></script>
+    <script type="module" src="js/common.js"></script>
+    <script type="module" src="js/step1.js"></script>
+    <script type="module" src="js/step2.js"></script>
+    <script type="module" src="js/step3.js"></script>
+    <script type="module">
+        import { onOpenCvReady } from './js/common.js';
+        import { initializeStep1 } from './js/step1.js';
+
+        window.onOpenCvReady = onOpenCvReady;
+        document.addEventListener('DOMContentLoaded', initializeStep1);
+    </script>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
