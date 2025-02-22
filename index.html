@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>照片變形校正工具</title>
+    <title>Photo Distortion Correction Tool</title>
     <script
       async
       src="https://docs.opencv.org/4.x/opencv.js"
@@ -14,21 +14,21 @@
   </head>
   <body>
     <div id="step1-container">
-      <h1>照片變形校正工具</h1>
-      <p>上傳一張照片，框選變形的四邊形區域，我們將自動校正為長方形。</p>
-      <div id="uploadArea">拖放照片至此或點擊選擇文件</div>
+      <h1>Photo Distortion Correction Tool</h1>
+      <p>Upload a photo with a perspective distortion, then drag four corners to select the area that should be a rectangle. The tool will automatically correct the distortion.</p>
+      <div id="uploadArea">Drag and drop a photo here or click to select one</div>
       <input type="file" id="uploadPhoto" accept="image/*" style="display: none" />
       <a href="https://github.com/ChrisTorng/ImageMeasurer2">GitHub source</a>
     </div>
 
     <div class="left-panel">
       <div class="step-content" id="step2-info">
-        <h2>框選四邊形</h2>
-        <p>拖曳四個頂點以框選照片中變形的長方形物體。</p>
+        <h2>Select Quadrilateral</h2>
+        <p>Drag the four corner points to select the distorted rectangular area in the photo.</p>
       </div>
       <div class="step-content" id="step3-info">
-        <h2>校正結果</h2>
-        <p>調整邊界以涵蓋完整內容，或返回上一步重新框選。</p>
+        <h2>Correction Result</h2>
+        <p>Adjust the boundary to include all needed content, or go back to re-select.</p>
       </div>
     </div>
 
@@ -48,12 +48,12 @@
 
     <div class="right-panel">
       <div class="step-content" id="step2-buttons">
-        <button id="nextStep">下一步</button>
-        <button id="exportStep2">匯出影像</button>
+        <button id="nextStep">Next</button>
+        <button id="exportStep2">Export Image</button>
       </div>
       <div class="step-content" id="step3-buttons">
-        <button id="previousStep">上一步</button>
-        <button id="exportStep3">匯出影像</button>
+        <button id="previousStep">Previous</button>
+        <button id="exportStep3">Export Image</button>
       </div>
     </div>
   </body>

@@ -3,9 +3,9 @@ let points = [];
 let selectedPoint = null;
 let originalFileName = "";
 let scaleFactor = 1;
-let transformedImage = null; // 新增這行
-let transformedMat = null;   // 新增這行
-let canvasSize = { width: 0, height: 0 };  // 新增：追蹤畫布大小
+let transformedImage = null;
+let transformedMat = null;
+let canvasSize = { width: 0, height: 0 };  // Track canvas size
 
 async function onOpenCvReady() {
     window.cv = await window.cv;
@@ -138,22 +138,18 @@ function setupStep2() {
     document
         .getElementById("exportStep2")
         .addEventListener("click", function () {
-            // 建立臨時 canvas 用於匯出原始大小的影像
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = originalImage.width;
             tempCanvas.height = originalImage.height;
             const tempCtx = tempCanvas.getContext("2d");
 
-            // 繪製原始影像
             tempCtx.drawImage(originalImage, 0, 0);
 
-            // 將畫面上的點座標轉換回原始大小
             const originalSizePoints = points.map(point => ({
                 x: point.x / scaleFactor,
                 y: point.y / scaleFactor
             }));
 
-            // 在原始大小的 canvas 上繪製四邊形
             tempCtx.beginPath();
             tempCtx.moveTo(originalSizePoints[0].x, originalSizePoints[0].y);
             for (let i = 1; i < originalSizePoints.length; i++) {
@@ -164,7 +160,6 @@ function setupStep2() {
             tempCtx.lineWidth = 2;
             tempCtx.stroke();
 
-            // 繪製四個角落的點
             originalSizePoints.forEach((point) => {
                 tempCtx.beginPath();
                 tempCtx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
@@ -197,11 +192,11 @@ let startPos = { x: 0, y: 0 };
 
 function initializeTransformedImage(width, height) {
   const canvas = document.getElementById('transformedCanvas');
-  canvasSize = { width, height };          // 修改：設定畫布大小
+  canvasSize = { width, height };          // Set canvas size
   canvas.width = width;
   canvas.height = height;
   
-  // 設定變形後影像的大小（保持不變）
+  // Set transformed image size (keep unchanged)
   transformedImageSize = {
     width: width,
     height: height
@@ -222,7 +217,7 @@ function setupTransformedImageControls() {
   const canvas = document.getElementById('transformedCanvas');
   const handles = document.querySelectorAll('.resize-handle');
 
-  // 移動影像
+  // Move image
   canvas.addEventListener('mousedown', (e) => {
     if (e.target === canvas) {
       isDragging = true;
@@ -233,7 +228,7 @@ function setupTransformedImageControls() {
     }
   });
 
-  // 調整畫布大小（不是影像大小）
+  // Adjust canvas size (not image size)
   handles.forEach(handle => {
     handle.addEventListener('mousedown', (e) => {
       isResizing = true;
@@ -242,7 +237,7 @@ function setupTransformedImageControls() {
       startPos = {
         x: e.clientX,
         y: e.clientY,
-        width: canvasSize.width,    // 修改：使用畫布大小
+        width: canvasSize.width,
         height: canvasSize.height
       };
       e.stopPropagation();
@@ -260,7 +255,7 @@ function setupTransformedImageControls() {
       const dx = e.clientX - startPos.x;
       const dy = e.clientY - startPos.y;
 
-      // 修改：調整畫布大小
+      // Update canvas size
       if (resizeType.includes('right') || resizeType === 'corner') {
         canvasSize.width = Math.max(transformedImageSize.width * 0.2, 
           startPos.width + dx);
@@ -270,7 +265,7 @@ function setupTransformedImageControls() {
           startPos.height + dy);
       }
 
-      // 更新畫布大小
+      // Update canvas size
       const canvas = document.getElementById('transformedCanvas');
       canvas.width = canvasSize.width;
       canvas.height = canvasSize.height;
@@ -289,7 +284,7 @@ function redrawTransformedImage() {
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-  // 重新繪製影像，考慮位置和大小
+  // Redraw image with position and size
   if (transformedImage) {
     ctx.drawImage(transformedImage,
       transformedImagePosition.x, transformedImagePosition.y,
@@ -297,14 +292,38 @@ function redrawTransformedImage() {
   }
 }
 
-// 修改匯出功能
 function exportTransformedImage() {
     if (!transformedMat) return;
 
+    // Create canvas with same ratio but original resolution
+    const scaleRatio = originalImage.width / transformedImageSize.width;
     const exportCanvas = document.createElement('canvas');
-    exportCanvas.width = transformedMat.cols;
-    exportCanvas.height = transformedMat.rows;
-    cv.imshow(exportCanvas, transformedMat);
+    exportCanvas.width = canvasSize.width * scaleRatio;
+    exportCanvas.height = canvasSize.height * scaleRatio;
+    const exportCtx = exportCanvas.getContext('2d');
+
+    // Create temporary canvas for original size transformed image
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = transformedMat.cols;
+    tempCanvas.height = transformedMat.rows;
+    cv.imshow(tempCanvas, transformedMat);
+
+    // Draw transformed image on export canvas, keeping original resolution
+    const scaledPosition = {
+        x: transformedImagePosition.x * scaleRatio,
+        y: transformedImagePosition.y * scaleRatio
+    };
+    const scaledSize = {
+        width: transformedMat.cols,
+        height: transformedMat.rows
+    };
+
+    exportCtx.drawImage(tempCanvas,
+        0, 0, tempCanvas.width, tempCanvas.height,
+        scaledPosition.x, scaledPosition.y,
+        scaledSize.width, scaledSize.height);
+
+    // Create download link
     const link = document.createElement('a');
     link.download = `${originalFileName}_transformed.png`;
     link.href = exportCanvas.toDataURL('image/png');
@@ -321,7 +340,7 @@ function setupStep3() {
         return;
     }
 
-    // 計算四邊形的寬度和高度
+    // Calculate quadrilateral width and height
     const getDistance = (p1, p2) => {
         const dx = (p1.x - p2.x) / scaleFactor;
         const dy = (p1.y - p2.y) / scaleFactor;
@@ -337,13 +356,13 @@ function setupStep3() {
         getDistance(points[3], points[0])
     );
 
-    // 計算原始座標
+    // Calculate original coordinates
     const originalPoints = points.map(point => ({
         x: point.x / scaleFactor,
         y: point.y / scaleFactor,
     }));
 
-    // 計算目標座標（保持在原位置）
+    // Calculate target coordinates (keep in original position)
     const minX = Math.min(...originalPoints.map(p => p.x));
     const minY = Math.min(...originalPoints.map(p => p.y));
     const targetPoints = [
@@ -353,7 +372,7 @@ function setupStep3() {
         { x: minX, y: minY + height }
     ];
 
-    // 建立轉換矩陣
+    // Create transformation matrix
     const srcPoints = cv.matFromArray(4, 1, cv.CV_32FC2, [
         originalPoints[0].x, originalPoints[0].y,
         originalPoints[1].x, originalPoints[1].y,
@@ -371,67 +390,49 @@ function setupStep3() {
     const src = cv.imread(originalImage);
     const dst = new cv.Mat();
 
-    // 使用原始影像大小進行轉換
-    // 修改：計算完整影像邊界與調整矩陣，避免變數命名衝突
-    let corners = [
-        { x: 0, y: 0 },
-        { x: originalImage.width, y: 0 },
-        { x: originalImage.width, y: originalImage.height },
-        { x: 0, y: originalImage.height }
-    ];
-    let transformedCorners = corners.map(pt => {
-        let srcMat = cv.matFromArray(3, 1, cv.CV_64FC1, [pt.x, pt.y, 1]);
-        let dstMat = new cv.Mat();
-        cv.gemm(transformMatrix, srcMat, 1, new cv.Mat(), 0, dstMat);
-        let d = dstMat.data64F[2];
-        let x = dstMat.data64F[0] / d;
-        let y = dstMat.data64F[1] / d;
-        srcMat.delete(); dstMat.delete();
-        return { x, y };
-    });
-    let warpMinX = Math.min(...transformedCorners.map(p => p.x));
-    let warpMinY = Math.min(...transformedCorners.map(p => p.y));
-    let warpMaxX = Math.max(...transformedCorners.map(p => p.x));
-    let warpMaxY = Math.max(...transformedCorners.map(p => p.y));
-    let dstWidth = Math.round(warpMaxX - warpMinX);
-    let dstHeight = Math.round(warpMaxY - warpMinY);
-
-    let translation = cv.matFromArray(3, 3, cv.CV_64F, [
-        1, 0, -warpMinX,
-        0, 1, -warpMinY,
-        0, 0, 1
-    ]);
-    let adjustedMatrix = new cv.Mat();
-    cv.gemm(translation, transformMatrix, 1, new cv.Mat(), 0, adjustedMatrix);
-
+    // Transform using original image size
     cv.warpPerspective(
         src,
         dst,
-        adjustedMatrix,
-        new cv.Size(dstWidth, dstHeight)
+        transformMatrix,
+        new cv.Size(originalImage.width, originalImage.height)
     );
-    // 釋放暫存矩陣
-    translation.delete(); adjustedMatrix.delete();
 
-    // 儲存完整轉換結果
-    transformedMat = dst.clone();
-
-    // 顯示轉換後影像
+    // Save original size transformation result
+    transformedMat = dst.clone();  // Store Mat object for later use
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = dst.cols;
     tempCanvas.height = dst.rows;
     cv.imshow(tempCanvas, dst);
+    
     transformedImage = new Image();
     transformedImage.onload = function() {
-        initializeTransformedImage(tempCanvas.width, tempCanvas.height);
+        initializeTransformedImage(canvas.width, canvas.height);
         redrawTransformedImage();
         setupTransformedImageControls();
     };
     transformedImage.src = tempCanvas.toDataURL();
 
-    // 釋放記憶體
+    // Adjust display size
+    const maxWidth = window.innerWidth * 0.9;
+    const maxHeight = window.innerHeight * 0.7;
+    const displayScale = Math.min(
+        maxWidth / originalImage.width,
+        maxHeight / originalImage.height,
+        1
+    );
+    canvas.width = originalImage.width * displayScale;
+    canvas.height = originalImage.height * displayScale;
+
+    // Scale display result
+    const displayMat = new cv.Mat();
+    cv.resize(dst, displayMat, new cv.Size(canvas.width, canvas.height));
+    cv.imshow(canvas, displayMat);
+
+    // Release memory
     src.delete();
     dst.delete();
+    displayMat.delete();
     transformMatrix.delete();
     srcPoints.delete();
     dstPoints.delete();
@@ -453,7 +454,7 @@ function setupStep3() {
     setupTransformedImageControls();
 }
 
-// 在離開第三步時清理記憶體
+// Clean up memory when leaving step 3
 function cleanupStep3() {
     if (transformedMat) {
         transformedMat.delete();

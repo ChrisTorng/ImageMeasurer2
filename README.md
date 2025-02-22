@@ -1,33 +1,37 @@
-# 照片變形校正工具
+# Photo Distortion Correction Tool
 
-這是一個簡單的網頁工具，可以將照片中變形的四邊形區域校正為標準的長方形。
+This is a simple web tool that corrects a distorted quadrilateral region in a photo into a proper rectangle while preserving the complete image.
 
-## 使用方式
+## How to Use
 
-1. 前往 [照片變形校正工具網頁](https://christorng.github.io/ImageMeasurer2/)
-2. 上傳一張包含變形內容的照片
-3. 拖曳四個頂點以框選裡面應為長方形但已變形的區域
-4. 點擊「下一步」進行校正
-5. 確認結果後可匯出校正後的影像
+1. Visit the [Photo Distortion Correction Tool website](https://christorng.github.io/ImageMeasurer2/)
+2. Upload a photo that contains distortion.
+3. Drag the four corner points to select the quadrilateral region that should be rectangular.
+4. Click "Next" to perform the correction.
+5. The correction result will display the complete transformed image, including areas outside the selected region.
+6. If needed, adjust the boundaries or return to re-select, then export the result.
 
-## 功能特點
+## Features
 
-- 純網頁應用，無需安裝
-- 支援拖放上傳照片
-- 即時預覽校正結果
-- 可匯出原始框選和校正後的影像
-- 使用 OpenCV.js 進行影像處理
+- Pure web application with no installation required.
+- Supports drag-and-drop image upload.
+- Live preview of correction results.
+- Preserves the complete image without clipping edges.
+- Automatically calculates the full transformation range.
+- Can export both the selected region and corrected image.
+- Uses OpenCV.js for image processing.
 
-## 技術說明
+## Technical Details
 
-- 使用純 HTML、CSS 和 JavaScript 開發
-- 運用 OpenCV.js 進行透視轉換
-- 支援本地端圖片處理，不會上傳圖片至伺服器
+- Developed using plain HTML, CSS, and JavaScript.
+- Uses OpenCV.js to perform perspective transformations.
+- Processes images locally without uploading to a server.
+- Computes the complete distortion matrix to retain all image content.
 
-## 原始碼
+## Source Code
 
-本專案原始碼位於 [GitHub](https://github.com/ChrisTorng/ImageMeasurer2)。
+The project source is available on [GitHub](https://github.com/ChrisTorng/ImageMeasurer2).
 
-## 授權
+## License
 
-本專案採用 MIT 授權。
+This project is licensed under the MIT License.
