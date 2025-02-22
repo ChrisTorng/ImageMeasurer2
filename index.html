@@ -13,33 +13,48 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div id="step1" class="active">
+    <div id="step1-container">
       <h1>照片變形校正工具</h1>
       <p>上傳一張照片，框選變形的四邊形區域，我們將自動校正為長方形。</p>
       <div id="uploadArea">拖放照片至此或點擊選擇文件</div>
-      <input
-        type="file"
-        id="uploadPhoto"
-        accept="image/*"
-        style="display: none"
-      />
+      <input type="file" id="uploadPhoto" accept="image/*" style="display: none" />
       <a href="https://github.com/ChrisTorng/ImageMeasurer2">GitHub source</a>
     </div>
 
-    <div id="step2">
-      <h2>框選四邊形</h2>
-      <p>拖曳四個頂點以框選照片中變形的長方形物體。</p>
-      <canvas id="photoCanvas"></canvas>
-      <button id="nextStep">下一步</button>
-      <button id="exportStep2">匯出影像</button>
+    <div class="left-panel">
+      <div class="step-content" id="step2-info">
+        <h2>框選四邊形</h2>
+        <p>拖曳四個頂點以框選照片中變形的長方形物體。</p>
+      </div>
+      <div class="step-content" id="step3-info">
+        <h2>校正結果</h2>
+        <p>調整邊界以涵蓋完整內容，或返回上一步重新框選。</p>
+      </div>
     </div>
 
-    <div id="step3">
-      <h2>校正結果</h2>
-      <p>調整邊界以涵蓋完整內容，或返回上一步重新框選。</p>
-      <canvas id="transformedCanvas"></canvas>
-      <button id="previousStep">上一步</button>
-      <button id="exportStep3">匯出影像</button>
+    <div class="main-content">
+      <div class="step-content" id="step2-canvas">
+        <canvas id="photoCanvas"></canvas>
+      </div>
+      <div class="step-content" id="step3-canvas">
+        <div class="transformedContainer">
+          <canvas id="transformedCanvas"></canvas>
+          <div class="resize-handle right"></div>
+          <div class="resize-handle bottom"></div>
+          <div class="resize-handle corner"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="step-content" id="step2-buttons">
+        <button id="nextStep">下一步</button>
+        <button id="exportStep2">匯出影像</button>
+      </div>
+      <div class="step-content" id="step3-buttons">
+        <button id="previousStep">上一步</button>
+        <button id="exportStep3">匯出影像</button>
+      </div>
     </div>
   </body>
 </html>

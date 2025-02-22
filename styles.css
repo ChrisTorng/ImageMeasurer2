@@ -5,14 +5,64 @@ body {
   padding: 0;
   background-color: #f0f0f0;
   overflow: hidden;
+  display: flex;
+  height: 100vh;
+}
+
+.left-panel, .main-content, .right-panel {
+  display: none;
+}
+
+body.has-image .left-panel,
+body.has-image .main-content,
+body.has-image .right-panel {
+  display: block;
+}
+
+#step1-container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-width: 600px;
+  text-align: center;
+}
+
+body.has-image #step1-container {
+  display: none;
+}
+
+.left-panel {
+  width: 250px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-right: 1px solid #dee2e6;
+  overflow-y: auto;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.right-panel {
+  width: 250px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-left: 1px solid #dee2e6;
 }
 
 canvas {
   border: 1px solid #ccc;
   margin: 10px auto;
   display: block;
-  max-width: 100vw;
-  max-height: 80vh;
+  max-width: calc(100vw - 520px);
+  max-height: 90vh;
 }
 
 button {
@@ -23,6 +73,7 @@ button {
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  width: 100%;
 }
 
 #step1,
@@ -34,13 +85,66 @@ button {
 #step1.active,
 #step2.active,
 #step3.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 #uploadArea {
   border: 2px dashed #ccc;
   padding: 20px;
   margin: 20px auto;
-  width: 80%;
+  width: 90%;
   max-width: 600px;
+}
+
+.navigation-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.step-content {
+  display: none;
+}
+
+.step-content.active {
+  display: block;
+}
+
+.transformedContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.transformedContainer canvas {
+  cursor: move;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #007bff;
+  border-radius: 50%;
+}
+
+.resize-handle.right {
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: e-resize;
+}
+
+.resize-handle.bottom {
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: s-resize;
+}
+
+.resize-handle.corner {
+  right: -5px;
+  bottom: -5px;
+  cursor: se-resize;
 }
