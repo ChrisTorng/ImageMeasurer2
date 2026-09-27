@@ -4,7 +4,7 @@ This is a simple web tool that corrects a distorted quadrilateral region in a ph
 
 ## How to Use
 
-1. Visit the [Photo Distortion Correction Tool website](https://christorng.github.io/ImageMeasurer2/)
+1. Visit the [Photo Distortion Correction Tool website](https://christorng.idv.tw/ImageMeasurer2/)
 2. Upload a photo that contains distortion.
 3. Drag the four corner points to select the quadrilateral region that should be rectangular.
 4. Click "Next" to perform the correction.
